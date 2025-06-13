@@ -7,6 +7,7 @@ import argparse
 from extensions.ecall import ECALL
 from vm import VM
 from extensions.rv32i import RV32I
+from extensions.m import M
 import struct
 import sys
 
@@ -64,6 +65,7 @@ def main():
     # Initialize the VM with the specified memory size and load all extensions
     vm = VM(mem_size=args.mem_size, extensions=[
         RV32I(),                            # Load the base RISC-V 32I instruction set
+        M(),                                # Load the M extension for integer multiplication and division
         ECALL(output_stream=sys.stdout)     # Use sys.stdout for output
     ])
 
