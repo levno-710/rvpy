@@ -86,7 +86,7 @@ class Add(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"add x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class AddI(InstructionImpl):
@@ -106,7 +106,7 @@ class AddI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"addi x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
 
 class Sub(InstructionImpl):
@@ -127,7 +127,7 @@ class Sub(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sub x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class Xor(InstructionImpl):
@@ -148,7 +148,7 @@ class Xor(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"xor x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class XorI(InstructionImpl):
@@ -168,7 +168,7 @@ class XorI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"xori x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
 
 class Or(InstructionImpl):
@@ -189,7 +189,7 @@ class Or(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"or x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class OrI(InstructionImpl):
@@ -209,7 +209,7 @@ class OrI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"ori x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
 
 class And(InstructionImpl):
@@ -230,7 +230,7 @@ class And(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"and x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class AndI(InstructionImpl):
@@ -250,7 +250,7 @@ class AndI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"andi x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
 
 class Sll(InstructionImpl):
@@ -271,7 +271,7 @@ class Sll(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sll x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class Sra(InstructionImpl):
@@ -292,7 +292,7 @@ class Sra(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sra x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class Srl(InstructionImpl):
@@ -313,7 +313,7 @@ class Srl(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"srl x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
 
 class SllI(InstructionImpl):
@@ -333,7 +333,7 @@ class SllI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"slli x{instruction.rd}, x{instruction.rs1}, {instruction.rs2 & 0x1F}"
 
 class SraI(InstructionImpl):
@@ -354,7 +354,7 @@ class SraI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"srai x{instruction.rd}, x{instruction.rs1}, {instruction.rs2 & 0x1F}"
 
 class SrlI(InstructionImpl):
@@ -375,7 +375,7 @@ class SrlI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"srl x{instruction.rd}, x{instruction.rs1}, {instruction.rs2 & 0x1F}"
     
 class Slt(InstructionImpl):
@@ -396,7 +396,7 @@ class Slt(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"slt x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
     
 class SltI(InstructionImpl):
@@ -416,7 +416,7 @@ class SltI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"slti x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
     
 class Sltu(InstructionImpl):
@@ -437,7 +437,7 @@ class Sltu(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sltu x{instruction.rd}, x{instruction.rs1}, x{instruction.rs2}"
     
 class SltuI(InstructionImpl):
@@ -457,7 +457,7 @@ class SltuI(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sltiu x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
     
 class Beq(InstructionImpl):
@@ -479,7 +479,7 @@ class Beq(InstructionImpl):
             # If not equal, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"beq x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Bne(InstructionImpl):
@@ -501,7 +501,7 @@ class Bne(InstructionImpl):
             # If equal, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"bne x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Blt(InstructionImpl):
@@ -523,7 +523,7 @@ class Blt(InstructionImpl):
             # If false, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"blt x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Bge(InstructionImpl):
@@ -545,7 +545,7 @@ class Bge(InstructionImpl):
             # If false, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"bge x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Bltu(InstructionImpl):
@@ -567,7 +567,7 @@ class Bltu(InstructionImpl):
             # If false, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"bltu x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Bgeu(InstructionImpl):
@@ -589,7 +589,7 @@ class Bgeu(InstructionImpl):
             # If false, just increment the program counter
             state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"bgeu x{instruction.rs1}, x{instruction.rs2}, {instruction.imm_b}"
     
 class Jal(InstructionImpl):
@@ -607,7 +607,7 @@ class Jal(InstructionImpl):
         # Update the program counter to the target address
         state.pc = u32(i32(state.pc) + imm_j)
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"jal x{instruction.rd}, {instruction.imm_j}"
     
 class JalR(InstructionImpl):
@@ -627,7 +627,7 @@ class JalR(InstructionImpl):
         # Update the program counter to the address in rs1
         state.pc = u32(i32(state.rf[rs1]) + imm_i) & ~u32(1)  # Ensure the address is aligned
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"jalr x{instruction.rd}, x{instruction.rs1}, {instruction.imm_i}"
     
 class Lui(InstructionImpl):
@@ -645,7 +645,7 @@ class Lui(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lui x{instruction.rd}, {instruction.imm_u}"
     
 class Auipc(InstructionImpl):
@@ -663,7 +663,7 @@ class Auipc(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"auipc x{instruction.rd}, {instruction.imm_u}"
     
 class Lb(InstructionImpl):
@@ -683,7 +683,7 @@ class Lb(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lb x{instruction.rd}, {instruction.imm_i}(x{instruction.rs1})"
     
 class Lbu(InstructionImpl):
@@ -703,7 +703,7 @@ class Lbu(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lbu x{instruction.rd}, {instruction.imm_i}(x{instruction.rs1})"
     
 class Lh(InstructionImpl):
@@ -723,7 +723,7 @@ class Lh(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lh x{instruction.rd}, {instruction.imm_i}(x{instruction.rs1})"
     
 class Lhu(InstructionImpl):
@@ -743,7 +743,7 @@ class Lhu(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lhu x{instruction.rd}, {instruction.imm_i}(x{instruction.rs1})"
     
 class Lw(InstructionImpl):
@@ -766,7 +766,7 @@ class Lw(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"lw x{instruction.rd}, {instruction.imm_i}(x{instruction.rs1})"
     
 class Sb(InstructionImpl):
@@ -786,7 +786,7 @@ class Sb(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sb x{instruction.rs2}, {instruction.imm_s}(x{instruction.rs1})"
     
 class Sh(InstructionImpl):
@@ -807,7 +807,7 @@ class Sh(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sh x{instruction.rs2}, {instruction.imm_s}(x{instruction.rs1})"
     
 class Sw(InstructionImpl):
@@ -830,7 +830,7 @@ class Sw(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return f"sw x{instruction.rs2}, {instruction.imm_s}(x{instruction.rs1})"
     
 class Fence(InstructionImpl):
@@ -844,7 +844,7 @@ class Fence(InstructionImpl):
         # Simply increment the program counter
         state.pc += 4
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return "fence"
     
 class Ebreak(InstructionImpl):
@@ -858,5 +858,5 @@ class Ebreak(InstructionImpl):
         # In this implementation, we simply set the halt flag to True
         state.halt = True
 
-    def disassemble(self, instruction):
+    def disassemble(self, instruction: Instruction):
         return "ebreak"
