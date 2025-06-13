@@ -4,6 +4,14 @@ A minimal RISC-V virtual machine implemented in Python for the Bachelor's Semina
 
 See the accompanying paper for design details: [./paper](paper)
 
+## Requirements
+
+- Python 3.12.4 (used for development)
+- Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage
 ```
 usage: main.py [-h] [-x] [-m MEM_SIZE] [-d] program
