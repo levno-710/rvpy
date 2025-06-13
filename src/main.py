@@ -8,6 +8,7 @@ from extensions.ecall import ECALL
 from vm import VM
 from extensions.rv32i import RV32I
 import struct
+import sys
 
 def load_hex(file_path: str) -> bytes:
     """
@@ -62,8 +63,8 @@ def main():
     
     # Initialize the VM with the specified memory size and load all extensions
     vm = VM(mem_size=args.mem_size, extensions=[
-        RV32I(),
-        ECALL(),
+        RV32I(),                            # Load the base RISC-V 32I instruction set
+        ECALL(output_stream=sys.stdout)     # Use sys.stdout for output
     ])
 
     # Load the program into memory at address 0 and set the program counter to 0

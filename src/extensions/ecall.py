@@ -8,6 +8,8 @@ from instruction import Instruction
 from instruction_impl import InstructionImpl
 from nums import u32, i32, i8, u8
 from state import RVState
+import sys
+from typing import TextIO
 
 class ECALL(Extension):
     """
@@ -16,13 +18,23 @@ class ECALL(Extension):
     It is used for IO in example programs.
     """
 
+    def __init__(self, output_stream: TextIO = sys.stdout):
+        """
+        Initializes the ECALL extension with an output stream.
+        Parameters:
+            output_stream (TextIO): The stream to which output will be printed. Defaults to sys.stdout.
+        """
+        self.output_stream = output_stream
+
     def get_instruction_implementations(self):
         return [
-            # Arithmetic instructions
-            Ecall(),
+            Ecall(self.output_stream),
         ]
     
 class Ecall(InstructionImpl):
+    def __init__(self, output_stream: TextIO):
+        self.output_stream = output_stream
+
     def match(self, instruction: Instruction) -> bool:
         return instruction.opcode == 0b1110011 \
            and instruction.funct3 == 0b000     \
@@ -42,8 +54,8 @@ class Ecall(InstructionImpl):
         if syscall_number == 10:
             state.halt = True
         elif syscall_number == 1:
-            # Print the integer in a0
-            print(state.rf[10])  # a0 is register 10
+            # print to the injected stream
+            print(state.rf[10], file=self.output_stream)
         else:
             raise NotImplementedError(f"System call {syscall_number} is not implemented.")
 
