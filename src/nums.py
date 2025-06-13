@@ -6,6 +6,8 @@
 import numpy as np
 
 # Give shorter names to numpy types for convenience
+u64 = np.uint64
+i64 = np.int64
 u32 = np.uint32
 i32 = np.int32
 u8  = np.uint8
