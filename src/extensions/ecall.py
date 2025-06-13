@@ -6,7 +6,6 @@
 from extension import Extension
 from instruction import Instruction
 from instruction_impl import InstructionImpl
-from nums import u32, i32, i8, u8
 from state import RVState
 import sys
 from typing import TextIO

@@ -2,9 +2,7 @@
 #
 # This file is part of my project for the bachelor's seminar "Moderne Hardware" at Heinrich-Heine-Universität Düsseldorf.
 # It is released under the GNU General Public License v3.0.
-import numpy as np
 from abc import ABC, abstractmethod
-from nums import u32
 from state import RVState
 from instruction import Instruction
 

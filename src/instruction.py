@@ -1,4 +1,3 @@
-import numpy as np
 from nums import u32, u8, i32
 
 class Instruction:
