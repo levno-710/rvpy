@@ -1,0 +1,494 @@
+\documentclass[sigconf]{acmart}
+\acmConference{Bachelor Seminar}{Moderne Hardware}{SS 2025}
+
+\usepackage{minted}
+
+\AtBeginDocument{%
+    \providecommand\BibTeX{{%
+    Bib\TeX}}
+}
+
+\settopmatter{
+    printacmref=false,
+    printccs=false,
+    printfolios=false
+}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\begin{document}
+
+\title{Implementation of a RISC-V VM in Python}
+
+\author{Elias Oelschner}
+\email{elias.oelschner@uni-duesseldorf.de}
+\affiliation{%
+    \institution{Heinrich Heine University}
+    \city{Düsseldorf}
+    \state{North Rhine-Westphalia}
+    \country{Germany}
+}
+
+\renewcommand{\shortauthors}{Oelschner}
+
+\begin{abstract}
+TODO
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+TODO
+
+\section{RISC-V}
+As described in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}, RISC-V is a free, open instruction set architecture (ISA) that is designed to be simple and extensible.
+It was developed at the University of California, Berkeley, and was originally intended for use in academic research and education. In recent years, it has gained popularity in the industry as a viable alternative to proprietary ISAs like x86 and ARM.
+The following goals of RISC-V are quoted directly from the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}:
+\begin{itemize}
+    \item "A completely \emph{open} ISA that is freely available to academia and industry." \cite{riscv-spec}
+    \item "A \emph{real} ISA suitable for direct native hardware implementation, not just simulation or binary translation." \cite{riscv-spec}
+    \item "An ISA that avoids 'over-architecting' for a particular microarchitecture style." \cite{riscv-spec}
+    \item "An ISA separated into a small base integer ISA, usable by itself as a base for customized accelerators or for educational purposes, and optional standard extensions, to support general-purpose software development." \cite{riscv-spec}
+    \item "Support for the revised 2008 IEEE-754 floating-point standard." \cite{riscv-spec}
+    \item "An ISA supporting extensive ISA extensions and specialized variants." \cite{riscv-spec}
+    \item "Both 32-bit and 64-bit address space variants for applications, operating system kernels, and hardware implementations." \cite{riscv-spec}
+    \item "An ISA with support for highly parallel multicore or manycore implementations, including heterogeneous multiprocessors." \cite{riscv-spec}
+    \item "A fully virtualizable ISA to ease hypervisor development." \cite{riscv-spec}
+    \item "An ISA that simplifies experiments with new privileged architecture designs." \cite{riscv-spec}
+\end{itemize}
+The RISC-V ISA does not define any implementation details, but rather only focuses on the instruction set itself. This allows for a wide range of implementations, from educational simulators to high-performance hardware implementations. \cite{riscv-spec}
+
+\subsection{History}
+RISC-V was developed in 2010 at the University of California, Berkeley. The project was led by Andrew Waterman, Krste Asanović, and David Patterson.
+In his dissertation, \textit{Design of the RISC-V Instruction Set Architecture}~\cite{waterman2016risc}, Andrew Waterman describes the reasons for the development of RISC-V and its design goals in more detail.
+He outlines the key reasons for the development of RISC-V:
+\begin{enumerate}
+    \item All dominant ISAs were proprietary, which made it difficult for academic and open-source communities to share or commercialize research. This restricted innovation and increased microprocessor costs.
+    \item Other popular ISAs were unnecessarily complex, due to legacy design decision and the need to maintain backward compatibility.
+    \item Most ISAs were not designed with extensibility in mind, making the addition of new features, such as 64-bit addressing, compressed instructions or virtualization, difficult.
+\end{enumerate}
+Waterman argues that RISC-V adresses these issues by providing a simple, open, and extensible ISA that is suitable for both academic research and commercial use. He also emphasizes the importance of a clean-slate design that avoids legacy issues and allows for future extensions. \cite{waterman2016risc}
+
+\subsection{Modular Design}
+RISC-V is designed to be modular, with a small base instruction set that can be extended with optional extensions.
+There are several base instruction sets defined, including \textit{RV32I} for 32-bit integer operations and \textit{RV64I} for 64-bit integer operations.
+These base instruction sets only include very basic integer operations, such as addition, subtraction, and logical operations as well as control flow instructions like branches and jumps.
+RISC-V provides a number of standard extensions that can be added to the base instruction set to support additional functionality. These extensions are designed to be optional, allowing implementers to choose which ones to include based on their specific needs. The \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec} lists the following standard extensions:
+\begin{itemize}
+    \item \textit{M} for integer multiplication and division.
+    \item \textit{A} for atomic memory operations.
+    \item \textit{F} for single-precision floating-point.
+    \item \textit{D} for double-precision floating-point.
+    \item \textit{B} for bit manipulation instructions.
+    \item \textit{C} for compressed instructions.
+    \item \textit{Zicsr} for control and status register instructions.
+    \item \textit{Zifencei} for instruction fetch fence.
+    \item Several other optional extensions, such as \textit{V} for vector operations, or \textit{Q} for quad-precision floating-point.
+\end{itemize}
+Most real world applications will require a combination of these extensions, as the base instruction set is very limited in functionality.
+For example, running a modern operating system like Ubuntu Linux requires all of the extensions listed above.
+
+\section{RV32I}
+This paper will focus on the \textit{RV32I} base instruction set, which is the most simple form of RISC-V.
+
+\subsection{Registers}
+RISC-V uses 32 registers, each 32 bits wide, which are used to store data and addresses. The registers are named \texttt{x0} to \texttt{x31}. Writes to \texttt{x0} are ignored, and reads from \texttt{x0} always return zero. The other registers are used for general-purpose computations.
+There also is a special register \textit{pc} (program counter) that holds the address of the next instruction to be executed. The \textit{RV32I} base instruction set does not define any special-purpose registers, but extensions may add additional registers. \cite{riscv-spec}
+
+\subsection{Instruction Format}
+Instructions in RISC-V are 32 bits wide and are divided into several fields.
+The encoding of the instruction fields depends on the type of instruction, which can be one of several types: R-Type, I-Type, S-Type, B-Type, U-Type, or J-Type:
+
+\textbf{R-Type}: Used for register-register operations.
+
+\begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
+    funct7 & rs2 & rs1 & funct3 & rd & opcode \\ \hline
+\end{tabular}
+
+\textbf{I-Type}: Used for immediate operations and load instructions.
+
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    31-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
+    imm[11:0] & rs1 & funct3 & rd & opcode \\ \hline
+\end{tabular}
+
+\textbf{S-Type}: Used for store instructions.
+
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
+    imm[11:5] & rs2 & rs1 & funct3 & imm[4:0] & opcode \\ \hline
+\end{tabular}
+
+\textbf{B-Type}: Used for branch instructions.
+
+\begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
+    imm[12|10:5] & rs2 & rs1 & funct3 & imm[4:1|11] & opcode \\ \hline
+\end{tabular}
+
+\textbf{U-Type}: Used for upper immediate instructions.
+
+\begin{tabular}{|c|c|c|}
+    \hline
+    31-12 & 11-7 & 6-0 \\ \hline
+    imm[31:12] & rd & opcode \\ \hline
+\end{tabular}
+
+\textbf{J-Type}: Used for jump instructions.
+
+\begin{tabular}{|c|c|c|}
+    \hline
+    31-12 & 11-7 & 6-0 \\ \hline
+    imm[20|10:1|11|19:12] & rd & opcode \\ \hline
+\end{tabular}
+
+\cite{riscv-spec}
+
+\subsection{Instruction Set}
+The following sections, describe the instructions of the \textit{RV32I} base instruction set in more detail.
+
+\subsection{Integer Register-immediate Instructions}
+The integer register-immediate instructions are used to perform operations on registers and immediate values. They are encoded as I-Type instructions and include the following operations:
+\begin{itemize}
+    \item \texttt{ADDI}: Add immediate value to register
+    \item \texttt{SLTI}: Set less than immediate
+    \item \texttt{SLTIU}: Set less than immediate unsigned
+    \item \texttt{ANDI}: AND immediate
+    \item \texttt{ORI}: OR immediate
+    \item \texttt{XORI}: Exclusive OR immediate
+\end{itemize}
+There are also several instructions that perform immediate shifts on registers. These instructions are encoded as R-Type instructions and include the following operations:
+\begin{itemize}
+    \item \texttt{SLLI}: Shift left logical immediate
+    \item \texttt{SRLI}: Shift right logical immediate
+    \item \texttt{SRAI}: Shift right arithmetic immediate
+\end{itemize}
+The last instruction in this category is the \texttt{LUI} instruction, which loads an immediate value into the upper 20 bits of a register and sets the lower 12 bits to zero. This instruction is encoded as a U-Type instruction.
+There is also another variant of the \texttt{LUI} instruction, called \texttt{AUIPC}, which adds the immediate value to the current program counter and stores the result in a register. This instruction is also encoded as a U-Type instruction. \cite{riscv-spec}
+
+\subsection{Integer Register-Register Instructions}
+All integer register-register instructions are encoded as R-Type instructions and operate on two registers, producing a result in a third register. The following operations are defined:
+\begin{itemize}
+    \item \texttt{ADD}: Add two registers
+    \item \texttt{SUB}: Subtract two registers
+    \item \texttt{SLT}: Set less than
+    \item \texttt{SLTU}: Set less than unsigned
+    \item \texttt{AND}: AND two registers
+    \item \texttt{OR}: OR two registers
+    \item \texttt{XOR}: Exclusive OR two registers
+    \item \texttt{SLL}: Shift left logical
+    \item \texttt{SRL}: Shift right logical
+    \item \texttt{SRA}: Shift right arithmetic
+\end{itemize}
+These instructions allow for basic arithmetic and logical operations on registers, as well as shifts. \cite{riscv-spec}
+
+\subsection{Jump Instructions}
+Jump instructions are used to change the flow of execution in a program. They are encoded as J-Type instructions.
+The following jump instructions are defined:
+\begin{itemize}
+    \item \texttt{JAL}: Jump and link. This instruction jumps to a target address and saves the return address in a register.
+    \item \texttt{JALR}: Jump and link register. This instruction jumps to an address stored in a register and saves the return address in a register.
+\end{itemize}
+\cite{riscv-spec}
+
+\subsection{Branch Instructions}
+Branch instructions are used to conditionally change the flow of execution based on the result of a comparison. They are encoded as B-Type instructions.
+The following branch instructions are defined:
+\begin{itemize}
+    \item \texttt{BEQ}: Branch if equal
+    \item \texttt{BNE}: Branch if not equal
+    \item \texttt{BLT}: Branch if less than
+    \item \texttt{BGE}: Branch if greater than or equal
+    \item \texttt{BLTU}: Branch if less than unsigned
+    \item \texttt{BGEU}: Branch if greater than or equal unsigned
+\end{itemize}
+\cite{riscv-spec}
+
+\subsection{Load and Store Instructions}
+Load and store instructions are used to access memory. They are encoded as I-Type or S-Type instructions, depending on whether they load data from memory into a register or store data from a register into memory.
+The following load instructions are defined:
+\begin{itemize}
+    \item \texttt{LB}: Load byte
+    \item \texttt{LH}: Load halfword
+    \item \texttt{LW}: Load word
+    \item \texttt{LBU}: Load byte unsigned
+    \item \texttt{LHU}: Load halfword unsigned
+\end{itemize}
+The following store instructions are defined:
+\begin{itemize}
+    \item \texttt{SB}: Store byte
+    \item \texttt{SH}: Store halfword
+    \item \texttt{SW}: Store word
+\end{itemize}
+\cite{riscv-spec}
+
+\subsection{Additional Instructions}
+There are 3 additional instructions that are not part of the previous categories:
+The \texttt{FENCE} instruction is used to ensure that all previous memory accesses are completed before any subsequent memory accesses. For the purpose of this paper, it can be ignored, as it is not relevant for the implementation of a RISC-V VM.
+The \texttt{ECALL} instruction is used to make a system call. The implementation section will  further explain how this instruction is handled in the RISC-V VM.
+The \texttt{EBREAK} instruction is used to trigger a breakpoint exception, which can be used for debugging purposes. It is not relevant for the implementation of a RISC-V VM, but it is worth mentioning.
+
+\section{VM Implementation}
+In this section, the implementation of a RISC-V VM in Python is described. The VM is designed to execute simple RISC-V programs and is implemented in a modular way, allowing for easy extension and modification.
+For fixed integer types, the numpy library is used:
+\begin{minted}{python}
+import numpy as np
+u32 = np.uint32
+i32 = np.int32
+u8  = np.uint8
+i8  = np.int8
+\end{minted}
+
+\subsection{State}
+First of all, let's define the state of the VM. The state consists of the following components:
+\begin{itemize}
+    \item \texttt{mem}: A numpy array of u8 (unsigned 8-bit integers) that represents the memory of the VM. The size of the memory is not fixed, but can be set to a desired value when creating the VM instance.
+    \item \texttt{rf}: A list of 32 registers, each 32 bits wide, initialized to zero.
+    \item \texttt{pc}: The 32-bit program counter, initialized to zero.
+    \item \texttt{halt}: A boolean flag that indicates whether the VM is halted or not. It is initialized to \texttt{False}.
+\end{itemize}
+
+\begin{minted}{python}
+class RVState:
+    mem:  np.ndarray[u8]  # Memory
+    rf:   np.ndarray[i32] # Register file
+    pc:   u32             # Program counter
+    halt: bool           # Halt flag
+
+    def __init__(self, mem_size: int) -> None:
+        self.mem = np.zeros(mem_size, dtype=u8)
+        self.rf = np.zeros(32, dtype=i32)
+        self.pc = u32(0)
+        self.halt = False
+\end{minted}
+For further details, see \texttt{src/state.py}.
+
+\subsection{Instruction Decoding}
+The next step is to decode the instructions. The instructions are stored in memory as 32-bit words, and the VM needs to be able to decode them into their respective fields.
+To do this, a wrapper class \texttt{Instruction} is created, which takes a 32-bit instruction word as input and decodes it into its respective fields.
+\begin{minted}{python}
+class Instruction:
+    instruction_word: u32
+    # Opcode and function fields
+    opcode: u8
+    funct3: u8
+    funct7: u8
+    funct12: int
+    # Register fields
+    rd: u8
+    rs1: u8
+    rs2: u8
+    # Immediate fields
+    imm_i: i32
+    imm_s: i32
+    imm_b: i32
+    imm_u: u32
+    imm_j: i32
+\end{minted}
+The \texttt{\_\_init\_\_} method handles the decoding of the instruction word and sets all of the fields accordingly.
+The \texttt{Instruction} class does not implement any specific instruction logic. It only serves as a data structure to hold the decoded instruction fields.
+For further details on how the decoding works, see \texttt{src/instruction.py}.
+
+\subsection{Instruction Matching}
+The instructions need to be matched against their respective implementations. To do this, an abstract base class \texttt{InstructionImpl} is used, which defines the interface for all instruction implementations.
+\begin{minted}{python}
+class InstructionImpl(ABC):
+    @abstractmethod
+    def match(self, instruction: Instruction) -> bool:
+        pass
+    @abstractmethod
+    def execute(self, state: RVState, instruction: Instruction) -> None:
+        pass
+\end{minted}
+The \texttt{match} method is used to check wether the instruction matches the implementation. Typically this is done by checking the opcode and function fields of the instruction.
+Each \texttt{Instruction} that is executed will be matched against all implementations. 
+If a match is found, the \texttt{execute} method is called with the current state and the instruction. Otherwise, an exception is raised.
+
+\subsection{Instruction Implementation}
+The next step is to implement the individual instructions. Each instruction is implemented as a subclass of \texttt{InstructionImpl}.
+For example, the \texttt{ADD} instruction can be implemented as follows:
+\begin{minted}{python}
+class Add(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0110011 \
+           and instruction.funct3 == 0b000     \
+           and instruction.funct7 == 0b0000000
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        # Extract the source and destination 
+        # registers from the instruction
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+
+        # Execute the addition
+        state.rf[rd] = state.rf[rs1] + state.rf[rs2]
+
+        # Increment the program counter
+        state.pc += 4
+\end{minted}
+The \texttt{match} method check if the opcode and function fields of the instruction match the \texttt{ADD} instruction as defined in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}.
+The \texttt{execute} method extracts the source and destination registers from the instruction and performs the addition. It then updates the destination register with the result and increments the program counter by 4, as each instruction is 4 bytes wide.
+This pattern is repeated for all other instructions, with each instruction implementing its own logic in the \texttt{execute} method.
+Another example is the \texttt{BLT} (branch if less than) instruction:
+\begin{minted}{python}
+class Blt(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b1100011 \
+           and instruction.funct3 == 0b100
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        # Extract the source registers and immediate value
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+        imm_b = instruction.imm_b
+
+        # Check if rs1 is less than rs2
+        if state.rf[rs1] < state.rf[rs2]:
+            # If true, update the program 
+            # counter to the target address
+            state.pc += imm_b
+        else:
+            # If false, just increment 
+            # the program counter
+            state.pc += 4
+\end{minted}
+This instruction is a bit more complex, as it involves a conditional branch. 
+Almost all of the base instructions are trivial to implement in a similar way as they only invovle simple arithmetic or logical operations.
+
+\subsection{Ecall}
+One notable exception is the \texttt{ECALL} instruction, which is used to make system calls. In the context of this VM, the \texttt{ECALL} instruction is used for simple input/output operations, such as printing to the console or reading from standard input. It is also used to halt the VM.
+A simple implementation of the \texttt{ECALL} instruction can be done as follows:
+\begin{minted}{python}
+class Ecall(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b1110011 \
+           and instruction.funct3 == 0b000     \
+           and instruction.funct12 == 0b000000000000
+    
+    def execute(self, state: RVState, instruction: 
+        Instruction) -> None:
+        # Load the system call number from 
+        # the a7 register
+        syscall_number = state.rf[17]
+        # Handle the system call
+        # For now we have:
+        # - 10: Exit the program
+        # - 1 : Print an integer (in a0)
+        if syscall_number == 10:
+            state.halt = True
+        elif syscall_number == 1:
+            # Print the integer in a0
+            print(state.rf[10])  # a0 is register 10
+        # Increment pc
+        state.pc += 4
+\end{minted}
+
+\subsection{VM Execution Loop}
+The final step is to implement the execution loop of the VM.
+The execution loop will perform the following steps:
+\begin{enumerate}
+    \item Fetch the next instruction from memory at the current program counter.
+    \item Decode the instruction into an \texttt{Instruction} object.
+    \item Match the instruction against all available implementations.
+    \item If a match is found, execute the instruction using the matched implementation.
+    \item If no match is found, raise an exception.
+    \item Repeat until the VM is halted.
+\end{enumerate}
+For implementation details, see \texttt{src/vm.py}.
+
+\section{First Program}
+With these components in place, a simple RISC-V program can be executed.
+The following program is a simple example, that will generate the first 30 Fibonacci numbers and print them using the \texttt{ECALL} instruction:
+\begin{minted}{gas}
+.global entry
+.text
+
+entry:
+    # s1 will hold the current Fibonacci number
+    li s1, 1
+    # s2 will hold the previous Fibonacci number
+    li s2, 0
+    # s3 will hold the number of 
+    # Fibonacci numbers to generate
+    li s3, 10 
+
+.loop:
+    # If s3 (counter) is zero, exit the loop
+    beq s3, zero, .done
+    # t0 = current + previous
+    add t0, s1, s2       
+    # Move current to previous
+    mv s2, s1           
+    # Move new Fibonacci number to current
+    mv s1, t0           
+    # Decrement the counter
+    addi s3, s3, -1      
+    
+    # syscall number for print integer
+    li a7, 1
+    # Move the current Fibonacci number to a0         
+    mv a0, s1
+    # make the syscall          
+    ecall                
+
+    # Repeat the loop
+    j .loop
+
+.done:
+    # syscall number for exit
+    li a7, 10
+    # make the syscall
+    ecall
+\end{minted}
+This program compiles to the following binary (shown in hexadecimal):
+\begin{minted}{text}
+00100493
+00000913
+00a00993
+02098263
+012482b3
+00048913
+00028493
+fff98993
+00100893
+00048513
+00000073
+fe1ff06f
+00a00893
+00000073
+\end{minted}
+This binary can be loaded into the VM's memory and executed.
+When done, the program produces the following output:
+\begin{verbatim}
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+\end{verbatim}
+So far, everything works as expected. The VM is able to execute simple RISC-V programs and handle the \texttt{ECALL} instruction for input/output operations.
+
+\subsection{Extending the VM}
+TODO: Add support for more extensions, such as multiplication, division, floating-point operations, etc. (Partly done, but I have not written about it yet.)
+If I have enough time, I will try to get linux to run on the VM.
+
+\section{Conclusion}
+TODO
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
+\endinput

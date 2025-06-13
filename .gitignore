@@ -1,0 +1,54 @@
+# ============================
+# Git ignore file for a Python project
+# ============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.env/
+venv/
+ENV/
+env/
+
+# Editor directories and files
+.vscode/
+*.swp
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# ============================
+# LaTeX artifacts in paper/
+# ============================
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.pdf
+paper/*.run.xml
+paper/*.synctex.gz
+paper/*.toc
+paper/*.lof
+paper/*.lot
+paper/*.nav
+paper/*.snm
+paper/*.vrb
+
+# minted output
+paper/_minted-paper/
+
+# bibliography
+paper/*.blg
+paper/*.bcf
