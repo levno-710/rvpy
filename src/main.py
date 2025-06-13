@@ -30,19 +30,19 @@ def load_hex(file_path: str) -> bytes:
     return b''.join(instructions)
 
 def main():
-    parser = argparse.ArgumentParser(description="RISC-V Virtual Machine")
+    parser = argparse.ArgumentParser(description="rvpy: A RISC-V virtual machine for executing RISC-V programs.")
     # Program argument	
-    parser.add_argument("program", type=str, help="Path to the RISC-V program to execute")
+    parser.add_argument("program", type=str, help="path to the RISC-V program to execute")
 
     # Hex flag
     parser.add_argument("-x", "--hex", action="store_true",
-                        help="Interpret the program as a hex file instead of a binary file")
+                        help="interpret the program as a hex file instead of a binary file")
     # Memory size argument
     parser.add_argument("-m", "--mem-size", type=int, default=1024 * 1024 * 1024,
-                        help="Size of the memory in bytes (default: 1 GiB)")
+                        help="size of the memory in bytes (default: 1 GiB)")
     # Disassemble flag
     parser.add_argument("-d", "--disassemble", action="store_true",
-                        help="Print executed instructions in disassembled form")
+                        help="print executed instructions in disassembled form")
 
     args = parser.parse_args()
 
