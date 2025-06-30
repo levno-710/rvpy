@@ -18,7 +18,7 @@ class RVState:
     mem:  np.ndarray[u8]  # Memory
     rf:   np.ndarray[i32] # Register file
     pc:   u32             # Program counter
-    halt: bool           # Halt flag
+    halt: bool            # Halt flag
 
     def __init__(self, mem_size: int = 1024 * 1024 * 1024) -> None:
         """
