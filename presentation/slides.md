@@ -20,8 +20,6 @@ Implementation einer RISC-V VM in Python
 
 # Inhalt
 - Was ist RISC-V?
-- Geschichte von RISC-V
-- RISC-V Architektur
 - Instruktionssatz
 - Implementierung in Python
 
