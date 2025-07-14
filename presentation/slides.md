@@ -111,6 +111,17 @@ _start:
 
 ---
 
+# Instruktionssatz
+RV32I definiert 47 Instruktionen aus mehreren Kategorien:
+- Arithmetik: `add`, `sub`
+- Logik: `and`, `or`, `xor`, `sll`, `srl`, `sra`
+- Vergleich: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
+- Vergleich: `slt`, `sltu`
+- Laden/Speichern: `lw`, `sw`
+- Sprung: `beq`, `bne`, `jal`, `jalr`
+
+---
+
 # Instruktionsformat
 RISC-V Instruktionen sind immer 32 Bit lang und in verschiedene encoding-Varianten unterteilt:
 - R-Format: für Register-zu-Register-Operationen
@@ -148,17 +159,6 @@ addi x1, x0, 10
 - `rd`: Zielregister (x1)
 - `rs1`: Quellregister (x0)
 - `imm[11:0]`: Immediate-Wert (10)
-
----
-
-# Instruktionssatz
-RV32I definiert 47 Instruktionen aus mehreren Kategorien:
-- Arithmetik: `add`, `sub`, `mul`, `div`, `rem`
-- Logik: `and`, `or`, `xor`, `sll`, `srl`, `sra`
-- Vergleich: `eq`, `ne`, `lt`, `le`, `gt`, `ge`
-- Vergleich: `slt`, `sltu`
-- Laden/Speichern: `lw`, `sw`
-- Sprung: `beq`, `bne`, `jal`, `jalr`
 
 ---
 
