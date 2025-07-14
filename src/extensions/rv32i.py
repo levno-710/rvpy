@@ -340,7 +340,7 @@ class SraI(InstructionImpl):
     def match(self, instruction: Instruction) -> bool:
         return instruction.opcode == 0b0010011 \
            and instruction.funct3 == 0b101 \
-           and instruction.f7 == 0b0100000
+           and instruction.funct7 == 0b0100000
     
     def execute(self, state: RVState, instruction: Instruction) -> None:
         # Extract the source register and immediate value
@@ -361,7 +361,7 @@ class SrlI(InstructionImpl):
     def match(self, instruction: Instruction) -> bool:
         return instruction.opcode == 0b0010011 \
            and instruction.funct3 == 0b101 \
-           and instruction.f7 == 0b0000000
+           and instruction.funct7 == 0b0000000
     
     def execute(self, state: RVState, instruction: Instruction) -> None:
         # Extract the source register and immediate value
