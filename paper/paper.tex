@@ -95,56 +95,63 @@ RISC-V uses 32 registers, each 32 bits wide, which are used to store data and ad
 There also is a special register \textit{pc} (program counter) that holds the address of the next instruction to be executed. The \textit{RV32I} base instruction set does not define any special-purpose registers, but extensions may add additional registers. \cite{riscv-spec}
 
 \subsection{Instruction Format}
-Instructions in RISC-V are 32 bits wide and are divided into several fields.
-The encoding of the instruction fields depends on the type of instruction, which can be one of several types: R-Type, I-Type, S-Type, B-Type, U-Type, or J-Type:
-
-\textbf{R-Type}: Used for register-register operations.
-
-\begin{tabular}{|c|c|c|c|c|c|c|}
-    \hline
-    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
-    funct7 & rs2 & rs1 & funct3 & rd & opcode \\ \hline
-\end{tabular}
-
-\textbf{I-Type}: Used for immediate operations and load instructions.
-
-\begin{tabular}{|c|c|c|c|c|c|}
-    \hline
-    31-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
-    imm[11:0] & rs1 & funct3 & rd & opcode \\ \hline
-\end{tabular}
-
-\textbf{S-Type}: Used for store instructions.
-
-\begin{tabular}{|c|c|c|c|c|c|}
-    \hline
-    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
-    imm[11:5] & rs2 & rs1 & funct3 & imm[4:0] & opcode \\ \hline
-\end{tabular}
-
-\textbf{B-Type}: Used for branch instructions.
-
-\begin{tabular}{|c|c|c|c|c|c|}
-    \hline
-    31-25 & 24-20 & 19-15 & 14-12 & 11-7 & 6-0 \\ \hline
-    imm[12|10:5] & rs2 & rs1 & funct3 & imm[4:1|11] & opcode \\ \hline
-\end{tabular}
-
-\textbf{U-Type}: Used for upper immediate instructions.
-
-\begin{tabular}{|c|c|c|}
-    \hline
-    31-12 & 11-7 & 6-0 \\ \hline
-    imm[31:12] & rd & opcode \\ \hline
-\end{tabular}
-
-\textbf{J-Type}: Used for jump instructions.
-
-\begin{tabular}{|c|c|c|}
-    \hline
-    31-12 & 11-7 & 6-0 \\ \hline
-    imm[20|10:1|11|19:12] & rd & opcode \\ \hline
-\end{tabular}
+Instructions in RISC-V are 32 bits wide and encoded in six formats:
+\begin{itemize}
+  \item \textbf{R-Type}: register-register operations.
+  \item \textbf{I-Type}: immediate operations and loads.
+  \item \textbf{S-Type}: store instructions.
+  \item \textbf{B-Type}: conditional branches.
+  \item \textbf{U-Type}: upper immediate instructions.
+  \item \textbf{J-Type}: jump instructions.
+\end{itemize}
+%
+\textbf{R-Type:} \\
+The R-Type instruction format is used for register-register operations. It includes fields for the opcode, a 3-bit function code (funct3), a 7-bit function code (funct7), and three register fields: rd (destination register), rs1 (source register 1), and rs2 (source register 2). \\
+\textbf{Example:} \texttt{add x1, x0, x2} would be encoded as follows:
+\begin{verbatim}
+0000000 00010 00000 000     00001 0110011
+^funct7 ^rs2  ^rs1  ^funct3 ^rd   ^opcode
+\end{verbatim} \\~\\
+%
+\textbf{I-Type:} \\
+The I-Type instruction format is used for immediate and load operations. It includes fields for a 12-bit immediate \texttt{imm[11:0]}, a 3-bit function code (funct3), register fields \texttt{rs1} and \texttt{rd}, and the opcode. \\
+\textbf{Example:} \texttt{addi x1, x2, 10} would be encoded as follows:
+\begin{verbatim}
+000000000010 00010 000 00001 0010011
+^imm[11:0]      ^rs1  ^funct3 ^rd   ^opcode
+\end{verbatim} \\~\\
+%
+\textbf{S-Type:} \\
+The S-Type format is used for store instructions. It splits the 12-bit immediate into \texttt{imm[11:5]} and \texttt{imm[4:0]}, with fields: \texttt{imm[11:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:0]}, and \texttt{opcode}. \\
+\textbf{Example:} \texttt{sw x2, 4(x1)} would be encoded as follows:
+\begin{verbatim}
+0000000 00010 00001 010 00100 0100011
+^imm[11:5] ^rs2  ^rs1  ^funct3 ^imm[4:0] ^opcode
+\end{verbatim} \\~\\
+%
+\textbf{B-Type:} \\
+The B-Type format is used for conditional branches. The 12-bit immediate is split into \texttt{imm[12|10:5]} and \texttt{imm[4:1|11]}, with fields: \texttt{imm[12|10:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:1|11]}, and \texttt{opcode}. \\
+\textbf{Example:} \texttt{beq x1, x2, 8} would be encoded as follows:
+\begin{verbatim}
+0000000 00010 00001 000 01000 1100011
+^imm[12|10:5] ^rs2  ^rs1  ^funct3 ^imm[4:1|11] ^opcode
+\end{verbatim} \\~\\
+%
+\textbf{U-Type:} \\
+The U-Type format is used for upper immediate instructions. It places a 20-bit immediate in bits 31:12, followed by \texttt{rd} and \texttt{opcode}. \\
+\textbf{Example:} \texttt{lui x1, 0x12345} would be encoded as follows:
+\begin{verbatim}
+00010010001101000101 00001 0110111
+^imm[31:12]           ^rd   ^opcode
+\end{verbatim} \\~\\
+%
+\textbf{J-Type:} \\
+The J-Type format is used for jump instructions. The 20-bit immediate is split into \texttt{imm[20|10:1|11|19:12]}, followed by \texttt{rd} and \texttt{opcode}. \\
+\textbf{Example:} \texttt{jal x1, 16} would be encoded as follows:
+\begin{verbatim}
+0 00000000 00010000 00001 1101111
+^imm[20|10:1|11|19:12] ^rd    ^opcode
+\end{verbatim}
 
 \cite{riscv-spec}
 

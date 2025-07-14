@@ -22,7 +22,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="risc-v">RISC-V</h1>
 <p>Implementation einer RISC-V VM in Python</p>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
@@ -41,7 +41,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="inhalt">Inhalt</h1>
 <ul>
 <li>Was ist RISC-V?</li>
@@ -66,7 +66,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="was-ist-risc-v">Was ist RISC-V?</h1>
 <ul>
 <li>Freie, offene Befehlssatzarchitektur (ISA)</li>
@@ -91,7 +91,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="geschichte-von-risc-v">Geschichte von RISC-V</h1>
 <ul>
 <li>2010 an der UC Berkeley von Andrew Waterman, Krste Asanović und David Patterson initiiert</li>
@@ -114,7 +114,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="ziele-von-risc-v">Ziele von RISC-V</h1>
 <ul>
 <li>Vollständig offene ISA, frei verfügbar für Wissenschaft und Industrie</li>
@@ -140,7 +140,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="modulares-design">Modulares Design</h1>
 <ul>
 <li>Basis-ISA definiert die grundlegenden Instruktionen (RV32I, RV64I)</li>
@@ -167,7 +167,7 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="rv32i">RV32I</h1>
 <ul>
 <li>Basis-ISA für 32-Bit RISC-V</li>
@@ -196,12 +196,13 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
 <h1 id="register">Register</h1>
 <ul>
 <li>32 Register (x0 bis x31)</li>
-<li>Register x0 ist immer 0 (Null-Register)
+<li><strong>Register x0 ist Hardwired auf 0</strong> (hat immer den Wert 0)
 <ul>
+<li>Writes werden ignoriert</li>
 <li>Das erlaubt es, einige Instruktionen als Pseudo-Instruktionen zu verwenden</li>
 <li>z.B. <code>add x1, x0, x2</code> ist äquivalent zu <code>mv x1, x2</code></li>
 </ul>
@@ -223,17 +224,20 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="instruktionsformat">Instruktionsformat</h1>
-<p>RISC-V Instruktionen sind immer 32 Bit lang und in verschiedene encoding-Varianten unterteilt:</p>
+;" data-marpit-pagination-total="25">
+<h1 id="assembly-sprache">Assembly-Sprache</h1>
 <ul>
-<li>R-Format: für Register-zu-Register-Operationen</li>
-<li>I-Format: für Immediate-Werte und Laden/Speichern</li>
-<li>S-Format: für Store-Operationen</li>
-<li>B-Format: für Sprung- und Verzweigungsoperationen</li>
-<li>U-Format: für große Immediate-Werte</li>
-<li>J-Format: für Sprungoperationen</li>
+<li>Instruktionen sind in der Regel 3-Adress-Form</li>
+<li>Register werden explizit angegeben</li>
+<li>Beispiel:</li>
 </ul>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-assembly">_start:
+  li x1, 42      # Lade 42 in Register x1
+.loop:
+  sub x1, x1, 1   # Subtrahiere 1 von x1
+  bne x1, x0, .loop # Springe zurück zur .loop, wenn x1 != 0
+  ...
+</code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="10" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -250,17 +254,16 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="beispiel-r-format">Beispiel: R-Format</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-assembly">add x1, x0, x2
-</code></pre>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code>0000000 00010 00000 000 00001 0110011
-^funct7  ^rs2  ^rs1 ^f3 ^rd   ^opcode
-</code></pre>
+;" data-marpit-pagination-total="25">
+<h1 id="instruktionsformat">Instruktionsformat</h1>
+<p>RISC-V Instruktionen sind immer 32 Bit lang und in verschiedene encoding-Varianten unterteilt:</p>
 <ul>
-<li><code>opcode</code>, <code>funct3</code>, <code>funct7</code>: spezifizieren die genaue Operation</li>
-<li><code>rd</code>: Zielregister (x1)</li>
-<li><code>rs1</code>, <code>rs2</code>: Quellregister (x0, x2)</li>
+<li>R-Format: für Register-zu-Register-Operationen</li>
+<li>I-Format: für Immediate-Werte und Laden/Speichern</li>
+<li>S-Format: für Store-Operationen</li>
+<li>B-Format: für Sprung- und Verzweigungsoperationen</li>
+<li>U-Format: für große Immediate-Werte</li>
+<li>J-Format: für Sprungoperationen</li>
 </ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
@@ -278,16 +281,17 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="instruktionssatz">Instruktionssatz</h1>
-<p>RV32I definiert 47 Instruktionen aus mehreren Kategorien:</p>
+;" data-marpit-pagination-total="25">
+<h1 id="beispiel-r-format">Beispiel: R-Format</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-assembly">add x1, x0, x2
+</code></pre>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code>0000000 00010 00000 000 00001 0110011
+^funct7 ^rs2  ^rs1  ^f3 ^rd   ^opcode
+</code></pre>
 <ul>
-<li>Arithmetik: <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>, <code>rem</code></li>
-<li>Logik: <code>and</code>, <code>or</code>, <code>xor</code>, <code>sll</code>, <code>srl</code>, <code>sra</code></li>
-<li>Vergleich: <code>eq</code>, <code>ne</code>, <code>lt</code>, <code>le</code>, <code>gt</code>, <code>ge</code></li>
-<li>Vergleich: <code>slt</code>, <code>sltu</code></li>
-<li>Laden/Speichern: <code>lw</code>, <code>sw</code></li>
-<li>Sprung: <code>beq</code>, <code>bne</code>, <code>jal</code>, <code>jalr</code></li>
+<li><code>opcode</code>, <code>funct3</code>, <code>funct7</code>: spezifizieren die genaue Operation</li>
+<li><code>rd</code>: Zielregister (x1)</li>
+<li><code>rs1</code>, <code>rs2</code>: Quellregister (x0, x2)</li>
 </ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
@@ -305,18 +309,18 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="vm-in-python">VM in Python</h1>
+;" data-marpit-pagination-total="25">
+<h1 id="beispiel-i-format">Beispiel: I-Format</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-assembly">addi x1, x0, 10
+</code></pre>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code>000000001010 00000 000 00001 0010011
+^imm[11:0]   ^rs1  ^f3 ^rd   ^opcode
+</code></pre>
 <ul>
-<li>Ziel: eine einfache RISC-V VM in Python zu implementieren</li>
-<li>Schritte:
-<ol>
-<li>Definieren der Register und des Speichers</li>
-<li>Implementieren der Instruktionsdekodierung</li>
-<li>Ausführen der Instruktionen</li>
-<li>Implementieren von I/O-Funktionen</li>
-</ol>
-</li>
+<li><code>opcode</code>, <code>f3</code>: spezifizieren die genaue Operation</li>
+<li><code>rd</code>: Zielregister (x1)</li>
+<li><code>rs1</code>: Quellregister (x0)</li>
+<li><code>imm[11:0]</code>: Immediate-Wert (10)</li>
 </ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
@@ -334,14 +338,17 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="state">State</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">RVState</span>:
-    mem:  np.ndarray[u8]  <span class="hljs-comment"># Memory</span>
-    rf:   np.ndarray[i32] <span class="hljs-comment"># Register file</span>
-    pc:   u32             <span class="hljs-comment"># Program counter</span>
-    halt: <span class="hljs-built_in">bool</span>            <span class="hljs-comment"># Halt flag</span>
-</code></pre>
+;" data-marpit-pagination-total="25">
+<h1 id="instruktionssatz">Instruktionssatz</h1>
+<p>RV32I definiert 47 Instruktionen aus mehreren Kategorien:</p>
+<ul>
+<li>Arithmetik: <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>, <code>rem</code></li>
+<li>Logik: <code>and</code>, <code>or</code>, <code>xor</code>, <code>sll</code>, <code>srl</code>, <code>sra</code></li>
+<li>Vergleich: <code>eq</code>, <code>ne</code>, <code>lt</code>, <code>le</code>, <code>gt</code>, <code>ge</code></li>
+<li>Vergleich: <code>slt</code>, <code>sltu</code></li>
+<li>Laden/Speichern: <code>lw</code>, <code>sw</code></li>
+<li>Sprung: <code>beq</code>, <code>bne</code>, <code>jal</code>, <code>jalr</code></li>
+</ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -358,20 +365,19 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="instruktionsdekodierung">Instruktionsdekodierung</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Instruction</span>:
-    instruction_word: u32
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, instruction_word: u32</span>) -&gt; <span class="hljs-literal">None</span>:
-        <span class="hljs-variable language_">self</span>.instruction_word = instruction_word
-
-<span class="hljs-meta">    @property</span>
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">opcode</span>(<span class="hljs-params">self</span>) -&gt; u8:
-        <span class="hljs-keyword">return</span> u8(<span class="hljs-variable language_">self</span>.instruction_word &amp; <span class="hljs-number">0x7F</span>)
-    
-    ...
-</code></pre>
+;" data-marpit-pagination-total="25">
+<h1 id="vm-in-python">VM in Python</h1>
+<ul>
+<li>Ziel: eine einfache RISC-V VM in Python zu implementieren</li>
+<li>Schritte:
+<ol>
+<li>Definieren der Register und des Speichers</li>
+<li>Implementieren der Instruktionsdekodierung</li>
+<li>Ausführen der Instruktionen</li>
+<li>Implementieren von I/O-Funktionen</li>
+</ol>
+</li>
+</ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -388,15 +394,20 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="instruktions-matching">Instruktions-Matching</h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">InstructionImpl</span>(<span class="hljs-title class_ inherited__">ABC</span>):
-<span class="hljs-meta">    @abstractmethod</span>
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">match</span>(<span class="hljs-params">self, instruction: Instruction</span>) -&gt; <span class="hljs-built_in">bool</span>:
-        <span class="hljs-keyword">pass</span>
-<span class="hljs-meta">    @abstractmethod</span>
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
-        <span class="hljs-keyword">pass</span>
+;" data-marpit-pagination-total="25">
+<h1 id="projektstruktur">Projektstruktur</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code>src/
+├── main.py              # Entry point, lädt hex-Programme
+├── vm.py                # VM-Hauptklasse, instruction loop
+├── state.py             # RVState: Register, Speicher, PC
+├── instruction.py       # Instruction: Dekodierung der Instruktionen
+├── instruction_impl.py  # InstructionImpl: Abstrakte Basisklasse
+├── extension.py         # Extension: Abstrakte Basisklasse
+├── nums.py              # Typ-Aliase für numpy (u32, i32, etc.)
+└── extensions/
+    ├── rv32i.py         # RV32I Basis-Instruktionssatz
+    ├── m.py             # M-Extension (mul, div, rem)
+    └── ecall.py         # ECALL für I/O-Funktionen
 </code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
@@ -414,17 +425,15 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="beispiel-add">Beispiel: <code>add</code></h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Add</span>(<span class="hljs-title class_ inherited__">InstructionImpl</span>):
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">match</span>(<span class="hljs-params">self, instruction: Instruction</span>) -&gt; <span class="hljs-built_in">bool</span>:
-        <span class="hljs-keyword">return</span> instruction.opcode == <span class="hljs-number">0b0110011</span> \
-           <span class="hljs-keyword">and</span> instruction.funct3 == <span class="hljs-number">0b000</span>     \
-           <span class="hljs-keyword">and</span> instruction.funct7 == <span class="hljs-number">0b0000000</span>
-
-    <span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
-        <span class="hljs-keyword">raise</span> NotImplementedError()
-</code></pre>
+;" data-marpit-pagination-total="25">
+<h1 id="vm-loop">VM-Loop</h1>
+<p>Die VM-Loop führt nun folgende Schritte aus, bis <code>halt</code> gesetzt ist:</p>
+<ol>
+<li>Lese die Instruktion am aktuellen Programmzähler (PC)</li>
+<li>Dekodiere die Instruktion</li>
+<li>Matche die Instruktion gegen die implementierten Instruktionsklassen</li>
+<li>Führe die Instruktion aus</li>
+</ol>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="17" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -441,20 +450,14 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="beispiel-add-1">Beispiel: <code>add</code></h1>
-<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
-    <span class="hljs-comment"># Extract the source and destination </span>
-    <span class="hljs-comment"># registers from the instruction</span>
-    rd = instruction.rd
-    rs1 = instruction.rs1
-    rs2 = instruction.rs2
-
-    <span class="hljs-comment"># Execute the addition</span>
-    state.rf[rd] = state.rf[rs1] + state.rf[rs2]
-
-    <span class="hljs-comment"># Increment the program counter</span>
-    state.pc += <span class="hljs-number">4</span>
+;" data-marpit-pagination-total="25">
+<h1 id="state">State</h1>
+<p>Die class <code>RVState</code> repräsentiert den Zustand der VM:</p>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">RVState</span>:
+    mem:  np.ndarray[u8]  <span class="hljs-comment"># Memory</span>
+    rf:   np.ndarray[i32] <span class="hljs-comment"># Register file</span>
+    pc:   u32             <span class="hljs-comment"># Program counter</span>
+    halt: <span class="hljs-built_in">bool</span>            <span class="hljs-comment"># Halt flag</span>
 </code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
@@ -472,12 +475,20 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="ecall">ECALL</h1>
-<ul>
-<li>Eigentlich für Systemcalls gedacht</li>
-<li>Wird in der VM für I/O verwendet</li>
-</ul>
+;" data-marpit-pagination-total="25">
+<h1 id="instruktionsdekodierung">Instruktionsdekodierung</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Instruction</span>:
+    instruction_word: u32
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, instruction_word: u32</span>) -&gt; <span class="hljs-literal">None</span>:
+        <span class="hljs-variable language_">self</span>.instruction_word = instruction_word
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">opcode</span>(<span class="hljs-params">self</span>) -&gt; u8:
+        <span class="hljs-keyword">return</span> u8(<span class="hljs-variable language_">self</span>.instruction_word &amp; <span class="hljs-number">0x7F</span>)
+    
+    ...
+</code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="19" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -494,16 +505,16 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="vm-loop">VM-Loop</h1>
-<p>Die VM-Loop führt nun folgende Schritte aus, bis <code>halt</code> gesetzt ist:</p>
-<ol>
-<li>Lese die Instruktion am aktuellen Programmzähler (PC)</li>
-<li>Dekodiere die Instruktion</li>
-<li>Matche die Instruktion gegen die implementierten Instruktionsklassen</li>
-<li>Führe die Instruktion aus</li>
-<li>Erhöhe den PC um 4</li>
-</ol>
+;" data-marpit-pagination-total="25">
+<h1 id="instruktions-matching">Instruktions-Matching</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">InstructionImpl</span>(<span class="hljs-title class_ inherited__">ABC</span>):
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">match</span>(<span class="hljs-params">self, instruction: Instruction</span>) -&gt; <span class="hljs-built_in">bool</span>:
+        <span class="hljs-keyword">pass</span>
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">pass</span>
+</code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="20" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -520,8 +531,17 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
-<h1 id="demo">Demo</h1>
+;" data-marpit-pagination-total="25">
+<h1 id="beispiel-add">Beispiel: <code>add</code></h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Add</span>(<span class="hljs-title class_ inherited__">InstructionImpl</span>):
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">match</span>(<span class="hljs-params">self, instruction: Instruction</span>) -&gt; <span class="hljs-built_in">bool</span>:
+        <span class="hljs-keyword">return</span> instruction.opcode == <span class="hljs-number">0b0110011</span> \
+           <span class="hljs-keyword">and</span> instruction.funct3 == <span class="hljs-number">0b000</span>     \
+           <span class="hljs-keyword">and</span> instruction.funct7 == <span class="hljs-number">0b0000000</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
+        <span class="hljs-keyword">raise</span> NotImplementedError()
+</code></pre>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="21" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
@@ -538,12 +558,126 @@ h1, h2, h3, h4, h5, h6 {
 h1, h2, h3, h4, h5, h6 {
   color: #006BB2;
 }
-;" data-marpit-pagination-total="21">
+;" data-marpit-pagination-total="25">
+<h1 id="beispiel-add-1">Beispiel: <code>add</code></h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self, state: RVState, instruction: Instruction</span>) -&gt; <span class="hljs-literal">None</span>:
+    <span class="hljs-comment"># Extract the source and destination </span>
+    <span class="hljs-comment"># registers from the instruction</span>
+    rd = instruction.rd
+    rs1 = instruction.rs1
+    rs2 = instruction.rs2
+
+    <span class="hljs-comment"># Execute the addition</span>
+    state.rf[rd] = state.rf[rs1] + state.rf[rs2]
+
+    <span class="hljs-comment"># Increment the program counter</span>
+    state.pc += <span class="hljs-number">4</span>
+</code></pre>
+<footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="22" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+" lang="de-DE" data-marpit-pagination="22" style="--paginate:true;--footer:![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg);--theme:gaia;--style:section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+;" data-marpit-pagination-total="25">
+<h1 id="ecall">ECALL</h1>
+<ul>
+<li>Eigentlich für Systemcalls gedacht</li>
+<li>Wird in der VM für I/O verwendet</li>
+<li>Das Register <code>x17</code> bestimmt die Art des Aufrufs</li>
+<li>Beispiel: <code>li x17, 1</code> für Print, <code>li x17, 10</code> für Exit</li>
+<li>Bei Print wird der Wert von <code>x10</code> ausgegeben</li>
+</ul>
+<footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="23" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+" lang="de-DE" data-marpit-pagination="23" style="--paginate:true;--footer:![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg);--theme:gaia;--style:section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+;" data-marpit-pagination-total="25">
+<h1 id="testprogramm">Testprogramm</h1>
+<pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-assembly">_boot:
+    li x10, 42          # Lade 42 in Register x10
+.loop:
+    li  x17, 1          # Setze x17 auf 1 (ECALL Print)
+    ecall               # Führe Print aus
+    addi x10, x10, -1   # Subtrahiere 1 von x10
+    bne x10, x0, .loop  # Springe zurück zur .loop, wenn x10 != 0
+    li  x17, 10         # Setze x17 auf 10 (ECALL Exit)
+    ecall               # Führe Exit aus
+</code></pre>
+<p>In der VM ausgeführt, werden die Zahlen von 42 bis 1 ausgegeben.</p>
+<footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="24" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+" lang="de-DE" data-marpit-pagination="24" style="--paginate:true;--footer:![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg);--theme:gaia;--style:section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+;" data-marpit-pagination-total="25">
 <h1 id="zusammenfassung">Zusammenfassung</h1>
 <ul>
 <li>RISC-V ist eine offene ISA, die für Forschung und Lehre entwickelt wurde</li>
 <li>Modulares Design ermöglicht flexible Erweiterungen</li>
 <li>Basis-ISA relativ simpel zu implementieren</li>
+<li>Python eignet sich gut für die VM-Implementierung</li>
+<li>Projektstruktur ermöglicht einfache Erweiterungen und Anpassungen</li>
+<li>Code auf GitHub: <a href="https://github.com/levno-710/rvpy">https://github.com/levno-710/rvpy</a></li>
+</ul>
+<footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
+</section>
+</foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="25" data-paginate="true" data-footer="![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg)" data-theme="gaia" data-style="section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+" lang="de-DE" data-marpit-pagination="25" style="--paginate:true;--footer:![w:150](Heinrich%20Heine%20Universität%20Düsseldorf.svg);--theme:gaia;--style:section {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #006BB2;
+}
+;" data-marpit-pagination-total="25">
+<h1 id="quellen">Quellen</h1>
+<ul>
+<li>
+<p>Waterman, A. &amp; Asanović, K. (2025). <em>The RISC-V Instruction Set Manual, Volume I: Unprivileged ISA</em>. RISC-V Foundation. Document Version 20250508.</p>
+</li>
+<li>
+<p>Waterman, A. (2016). <em>Design of the RISC-V Instruction Set Architecture</em>. Ph.D. Dissertation, EECS Department, University of California, Berkeley.</p>
+</li>
 </ul>
 <footer><img src="Heinrich%20Heine%20Universit%C3%A4t%20D%C3%BCsseldorf.svg" alt="" style="width:150px;" /></footer>
 </section>
