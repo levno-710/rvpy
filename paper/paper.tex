@@ -283,6 +283,18 @@ class RVState:
 \end{minted}
 For further details, see \texttt{src/state.py}.
 
+\subsection{VM Execution Loop}
+The execution loop of the VM performs the following steps:
+\begin{enumerate}
+    \item Fetch the next instruction from memory at the current program counter.
+    \item Decode the instruction into an \texttt{Instruction} object.
+    \item Match the instruction against all available implementations.
+    \item If a match is found, execute the instruction using the matched implementation.
+    \item If no match is found, raise an exception.
+    \item Repeat until the VM is halted.
+\end{enumerate}
+Each of these steps will be described in detail in the following subsections.
+
 \subsection{Instruction Decoding}
 The VM fetches instructions from memory as raw 32-bit words. The raw word is stored and all decoded components are exposed via Python \texttt{@property} accessors.
 
@@ -391,45 +403,44 @@ This instruction is a bit more complex, as it involves a conditional branch.
 Almost all of the base instructions are trivial to implement in a similar way as they only invovle simple arithmetic or logical operations.
 
 \subsection{Ecall}
-One notable exception is the \texttt{ECALL} instruction, which is used to make system calls. In the context of this VM, the \texttt{ECALL} instruction is used for simple input/output operations, such as printing to the console or reading from standard input. It is also used to halt the VM.
-A simple implementation of the \texttt{ECALL} instruction can be done as follows:
+The \texttt{ECALL} represents the interface between user programs and the system environment. Unlike arithmetic or branch instructions that operate purely on registers and memory, \texttt{ECALL} transfers control to handle system calls.
+
+In a hardware implementation, \texttt{ECALL} would trigger an interrupt, transferring control to the operating system. However, the VM implements system calls directly within the instruction handler to provide basic I/O functionality for demonstration programs.
+
+The \texttt{ECALL} instruction is encoded as an I-Type instruction with specific field values:
 \begin{minted}{python}
-class Ecall(InstructionImpl):
-    def match(self, instruction: Instruction) -> bool:
-        return instruction.opcode == 0b1110011 \
-           and instruction.funct3 == 0b000     \
-           and instruction.funct12 == 0b000000000000
-    
-    def execute(self, state: RVState, instruction: 
-        Instruction) -> None:
-        # Load the system call number from 
-        # the a7 register
-        syscall_number = state.rf[17]
-        # Handle the system call
-        # For now we have:
-        # - 10: Exit the program
-        # - 1 : Print an integer (in a0)
-        if syscall_number == 10:
-            state.halt = True
-        elif syscall_number == 1:
-            # Print the integer in a0
-            print(state.rf[10])  # a0 is register 10
-        # Increment pc
-        state.pc += 4
+def match(self, instruction: Instruction) -> bool:
+    return instruction.opcode == 0b1110011 \
+       and instruction.funct3 == 0b000     \
+       and instruction.funct12 == 0b000000000000
 \end{minted}
 
-\subsection{VM Execution Loop}
-The final step is to implement the execution loop of the VM.
-The execution loop will perform the following steps:
-\begin{enumerate}
-    \item Fetch the next instruction from memory at the current program counter.
-    \item Decode the instruction into an \texttt{Instruction} object.
-    \item Match the instruction against all available implementations.
-    \item If a match is found, execute the instruction using the matched implementation.
-    \item If no match is found, raise an exception.
-    \item Repeat until the VM is halted.
-\end{enumerate}
-For implementation details, see \texttt{src/vm.py}.
+The VM implements two system calls following RISC-V Linux conventions:
+\begin{itemize}
+    \item \textbf{System call 1}: Print integer from register \texttt{a0} to the output stream
+    \item \textbf{System call 10}: Terminate program execution by setting the halt flag
+\end{itemize}
+
+The system call number is read from register \texttt{a7}, with arguments passed in registers \texttt{a0} through \texttt{a6} as needed:
+\begin{minted}{python}
+def execute(
+    self, 
+    state: RVState, 
+    instruction: Instruction
+) -> None:
+    syscall_number = state.rf[17]  # a7 register
+    if syscall_number == 10:
+        state.halt = True
+    elif syscall_number == 1:
+        # Print integer from a0 register
+        print(state.rf[10], file=self.output_stream)
+    else:
+        raise NotImplementedError(f"System call 
+            {syscall_number} is not implemented.")
+    state.pc += 4
+\end{minted}
+
+This allows the VM to execute programs that require basic output functionality, as demonstrated by the following Fibonacci example program.
 
 \section{First Program}
 With these components in place, a simple RISC-V program can be executed.
@@ -538,13 +549,14 @@ The \texttt{ECALL} extension (src/extensions/ecall.py) handles system calls for 
 Extensions are loaded during VM initialization. The VM constructor accepts a list of extension objects and loads them sequentially:
 \begin{minted}{python}
 def load_extension(self, extension: Extension) -> None:
-    ext_impls = extension.get_instruction_implementations()
+    ext_impls = extension
+        .get_instruction_implementations()
     self.instruction_implementations.extend(ext_impls)
 \end{minted}
-This approach allows extensions to be combined freely, though care must be taken to avoid conflicting instruction encodings.
+This approach allows extensions to be combined freely, though care must be taken to avoid conflicting instructions.
 
 \paragraph{Instruction Resolution}
-During execution, the VM matches each fetched instruction against all loaded implementations using the \texttt{match\_impl} method (src/vm.py:73). This linear search is simple but not performance-optimized. The VM ensures exactly one match per instruction, raising an exception if multiple implementations claim the same encoding.
+During execution, the VM matches each fetched instruction against all loaded implementations. This linear search is simple but not performance-optimized. The VM ensures exactly one match per instruction, raising an exception if multiple implementations claim the same encoding.
 
 Adding new extensions only requires implementing the \texttt{Extension} interface and providing instruction implementations that follow the \texttt{InstructionImpl} pattern shown in section \ref{sec:instruction-implementation}. No modifications to the core VM logic are necessary. 
 
