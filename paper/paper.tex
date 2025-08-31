@@ -41,7 +41,7 @@ RISC-V has rapidly evolved from a research architecture into a widely adopted op
 
 In this work, I describe a minimal implementation of an interpreter / virtual machine (VM) for the RV32I base ISA written in Python. Python is chosen for its simplicity. The goals are correctness at the architectural level and a modular structure that makes adding new instructions or extensions easy.
 
- The complete source code is available at: \url{https://github.com/levno-710/rvpy}
+The complete source code is available at: \url{https://github.com/levno-710/rvpy}
 
 \section{RISC-V}
 As described in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}, RISC-V is a free, open instruction set architecture (ISA) that is designed to be simple and extensible.
@@ -328,6 +328,17 @@ class Instruction:
 
 \paragraph{Register / function fields} Extraction of \texttt{rd}, \texttt{rs1}, \texttt{rs2}, \texttt{funct3} and \texttt{funct7} (plus \texttt{opcode}) is a straightforward fixed-bit slicing using masks and shifts corresponding exactly to the layouts shown in the ISA manual. \cite{riscv-spec}
 
+\paragraph{Immediate Value Decoding} The instruction class implements all five immediate formats, each with distinct bit arrangements and sign extension requirements:
+
+\begin{minted}{python}
+@property
+def imm_i(self) -> i32:
+    imm = i32(self.instruction_word >> 20) & 0xFFF
+    if imm & 0x800:  # Check sign bit
+        imm |= ~0xFFF  # Sign extend
+    return imm
+\end{minted}
+
 The class deliberately omits any execution semantics; it is a pure decoder / view over the 32-bit word. Execution logic remains in instruction implementation classes described in the following section:
 
 \subsection{Instruction Matching}\label{sec:instruction-matching}
@@ -373,10 +384,108 @@ class Add(InstructionImpl):
         # Increment the program counter
         state.pc += 4
 \end{minted}
-The \texttt{match} method check if the opcode and function fields of the instruction match the \texttt{ADD} instruction as defined in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}.
+The \texttt{match} method checks if the opcode and function fields of the instruction match the \texttt{ADD} instruction as defined in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}.
 The \texttt{execute} method extracts the source and destination registers from the instruction and performs the addition. It then updates the destination register with the result and increments the program counter by 4, as each instruction is 4 bytes wide.
-This pattern is repeated for all other instructions, with each instruction implementing its own logic in the \texttt{execute} method.
-Another example is the \texttt{BLT} (branch if less than) instruction:
+
+\subsection{More Instruction Examples}
+While the \texttt{ADD} instruction demonstrates the basic implementation pattern, different instruction categories require specialized handling for their unique semantics. The following examples illustrate how the abstract \texttt{InstructionImpl} interface accommodates the diverse requirements of the RV32I instruction set.
+
+\paragraph{Arithmetic Operations}
+Register-register arithmetic operations follow a consistent pattern of extracting operands, performing the operation, storing the result, and advancing the program counter. The \texttt{SUB} instruction demonstrates this pattern:
+
+\begin{minted}{python}
+class Sub(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0110011 \
+           and instruction.funct3 == 0b000     \
+           and instruction.funct7 == 0b0100000
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+        
+        state.rf[rd] = state.rf[rs1] - state.rf[rs2]
+        state.pc += 4
+\end{minted}
+
+The main distinction from \texttt{ADD} is the \texttt{funct7} field value (\texttt{0b0100000} vs \texttt{0b0000000}), which allows the same opcode to encode different operations.
+
+\paragraph{Immediate Operations}
+Immediate operations work with sign-extended 12-bit immediates. The \texttt{XORI} instruction exemplifies this category:
+
+\begin{minted}{python}
+class XorI(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0010011 \
+           and instruction.funct3 == 0b100
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        imm_i = instruction.imm_i
+        
+        state.rf[rd] = state.rf[rs1] ^ imm_i
+        state.pc += 4
+\end{minted}
+
+The \texttt{imm\_i} property handles sign extension, ensuring that values like \texttt{0xFFF} are treated as \texttt{-1} rather than \texttt{4095}.
+
+\paragraph{Shift Operations}
+The \texttt{SRAI} (shift right arithmetic immediate) instruction demonstrates arithmetic right shifts:
+
+\begin{minted}{python}
+class SraI(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0010011 \
+           and instruction.funct3 == 0b101 \
+           and instruction.funct7 == 0b0100000
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        # Extract 5-bit shift amount from rs2 field
+        shift_amt = instruction.rs2 & 0x1F
+        
+        # Arithmetic right shift preserves sign bit
+        state.rf[rd] = state.rf[rs1] >> shift_amt
+        state.pc += 4
+\end{minted}
+
+For immediate shifts, the shift amount is encoded in the \texttt{rs2} field, with only the lower 5 bits valid for 32-bit operations.
+
+\paragraph{Set-Less-Than Operations}
+These instructions implement comparison operations that set the destination register to 1 if the condition is true, 0 otherwise. The \texttt{SLTU} instruction demonstrates unsigned comparison:
+
+\begin{minted}{python}
+class Sltu(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0110011 \
+           and instruction.funct3 == 0b011     \
+           and instruction.funct7 == 0b0000000
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+        
+        # Cast to unsigned for comparison
+        result = int(
+            u32(state.rf[rs1]) < u32(state.rf[rs2])
+        )
+        state.rf[rd] = result
+        state.pc += 4
+\end{minted}
+
+The unsigned cast is needed, because the register file is defined as signed 32-bit integers, while \texttt{SLTU} operates on unsigned values.
+
+\paragraph{Branch Instructions}
+Branch instructions implement conditional control flow by modifying the program counter based on register comparisons. The \texttt{BLT} (branch if less than) instruction shows this pattern:
+
 \begin{minted}{python}
 class Blt(InstructionImpl):
     def match(self, instruction: Instruction) -> bool:
@@ -385,24 +494,65 @@ class Blt(InstructionImpl):
     
     def execute(self, state: RVState, instruction: 
     Instruction) -> None:
-        # Extract the source registers
-        # and immediate value
         rs1 = instruction.rs1
         rs2 = instruction.rs2
         imm_b = instruction.imm_b
 
-        # Check if rs1 is less than rs2
         if state.rf[rs1] < state.rf[rs2]:
-            # If true, update the program 
-            # counter to the target address
-            state.pc += imm_b
+            state.pc += imm_b  # Branch taken
         else:
-            # If false, just increment 
-            # the program counter
-            state.pc += 4
+            state.pc += 4     # Branch not taken
 \end{minted}
-This instruction is a bit more complex, as it involves a conditional branch. 
-Almost all of the base instructions are trivial to implement in a similar way as they only invovle simple arithmetic or logical operations.
+
+The \texttt{imm\_b} property handles the complex B-type immediate encoding, reconstructing the target offset with proper sign extension.
+
+\paragraph{Load and Store Instructions}
+Memory operations require address calculation and data type conversion. The \texttt{LW} (load word) instruction demonstrates this:
+
+\begin{minted}{python}
+class Lw(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0000011 \
+           and instruction.funct3 == 0b010
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        imm_i = instruction.imm_i
+        
+        # Calculate effective address
+        addr = state.rf[rs1] + imm_i
+        
+        # Load 32-bit word from memory (little-endian)
+        word_bytes = state.mem[addr:addr + 4]
+        word_value = 
+            np.frombuffer(word_bytes, dtype=u32)[0]
+        state.rf[rd] = i32(word_value)
+        state.pc += 4
+\end{minted}
+
+The implementation handles endianness conversion and ensures that loaded values are properly sign-extended when necessary.
+
+\paragraph{Jump Instructions}
+Jump operations modify control flow while saving return addresses. The \texttt{JAL} instruction shows both aspects:
+
+\begin{minted}{python}
+class Jal(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b1101111
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        imm_j = instruction.imm_j
+        
+        # Save return address (PC + 4)
+        state.rf[rd] = state.pc + 4
+        
+        # Jump to target address
+        state.pc += imm_j
+\end{minted}
 
 \subsection{Ecall}
 The \texttt{ECALL} represents the interface between user programs and the system environment. Unlike arithmetic or branch instructions that operate purely on registers and memory, \texttt{ECALL} transfers control to handle system calls.
@@ -544,6 +694,58 @@ The VM includes three extensions that demonstrate different categories of functi
 The \texttt{RV32I} extension (src/extensions/rv32i.py) implements the complete base integer instruction set described in Section 3. It provides 37 instruction implementations covering arithmetic, logical, shift, branch, jump, load/store, and system operations.
 
 The \texttt{M} extension (src/extensions/m.py) adds integer multiplication and division operations. It implements 8 instructions: \texttt{MUL}, \texttt{MULH}, \texttt{MULHU}, \texttt{MULHSU}, \texttt{DIV}, \texttt{DIVU}, \texttt{REM}, and \texttt{REMU}. This extension includes helper functions for correct signed and unsigned arithmetic operations.
+
+\paragraph{M Extension Implementation Details}
+The M extension demonstrates how extensions handle operations that require extended precision or special arithmetic considerations. The \texttt{MUL} instruction provides a representative example:
+
+\begin{minted}{python}
+class Mul(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0110011 \
+           and instruction.funct3 == 0b000     \
+           and instruction.funct7 == 0b0000001
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+        
+        # 32-bit multiplication, keep lower 32 bits
+        result = 
+            (state.rf[rs1] * state.rf[rs2])
+             & 0xFFFFFFFF
+        state.rf[rd] = i32(result)
+        state.pc += 4
+\end{minted}
+
+This instruction has the same opcode as the \texttt{ADD} instruction, but a different \texttt{funct7} field value (\texttt{0b0000001}), which identifies M extension instructions. The \texttt{MULH} instruction demonstrates the extension's handling of extended precision:
+
+\begin{minted}{python}
+class Mulh(InstructionImpl):
+    def match(self, instruction: Instruction) -> bool:
+        return instruction.opcode == 0b0110011 \
+           and instruction.funct3 == 0b001     \
+           and instruction.funct7 == 0b0000001
+    
+    def execute(self, state: RVState, instruction: 
+    Instruction) -> None:
+        rd = instruction.rd
+        rs1 = instruction.rs1
+        rs2 = instruction.rs2
+        
+        # 64-bit signed multiplication
+        result = np.multiply(
+            i32(state.rf[rs1]), 
+            i32(state.rf[rs2]), 
+            dtype=i64
+        )
+        # Extract upper 32 bits
+        state.rf[rd] = i32(result >> 32)
+        state.pc += 4
+\end{minted}
+
+This implementation uses NumPy's typed multiplication to ensure correct signed 64-bit arithmetic before extracting the upper 32 bits. The extension also handles division with proper overflow and divide-by-zero semantics as specified in the RISC-V manual.
 
 The \texttt{ECALL} extension (src/extensions/ecall.py) handles system calls for basic I/O operations. Unlike hardware implementations that would trap to the operating system, this extension directly implements two system calls: printing integers (syscall 1) and program termination (syscall 10).
 
