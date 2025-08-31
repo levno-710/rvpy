@@ -31,13 +31,15 @@
 \renewcommand{\shortauthors}{Oelschner}
 
 \begin{abstract}
-TODO
+In this paper, I present a minimal yet extensible implementation of a RISC-V virtual machine (VM) written in Python. The VM cleanly separates state representation (register file, memory, program counter, halt semantics), instruction decoding and execution semantics encapsulated per instruction. The design prioritizes readability over performance. I demonstrate the VM by executing a hand-written Fibonacci program assembled to machine code.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
-TODO
+RISC-V has rapidly evolved from a research architecture into a widely adopted open instruction set architecture (ISA) spanning from microcontrollers to larger systems \cite{riscv-spec}. Its fully open specification, modular extension scheme, and avoidance of legacy constraints make it attractive in a variety of contexts, including education, research, and industry.
+
+In this work, I describe a minimal implementation of an interpreter / virtual machine (VM) for the RV32I base ISA written in Python. Python is chosen for its simplicity. The goals are correctness at the architectural level and a modular structure that makes adding new instructions or extensions easy.
 
 \section{RISC-V}
 As described in the \textit{RISC-V Instruction Set Manual}~\cite{riscv-spec}, RISC-V is a free, open instruction set architecture (ISA) that is designed to be simple and extensible.
@@ -94,66 +96,6 @@ This paper will focus on the \textit{RV32I} base instruction set, which is the m
 RISC-V uses 32 registers, each 32 bits wide, which are used to store data and addresses. The registers are named \texttt{x0} to \texttt{x31}. Writes to \texttt{x0} are ignored, and reads from \texttt{x0} always return zero. The other registers are used for general-purpose computations.
 There also is a special register \textit{pc} (program counter) that holds the address of the next instruction to be executed. The \textit{RV32I} base instruction set does not define any special-purpose registers, but extensions may add additional registers. \cite{riscv-spec}
 
-\subsection{Instruction Format}
-Instructions in RISC-V are 32 bits wide and encoded in six formats:
-\begin{itemize}
-  \item \textbf{R-Type}: register-register operations.
-  \item \textbf{I-Type}: immediate operations and loads.
-  \item \textbf{S-Type}: store instructions.
-  \item \textbf{B-Type}: conditional branches.
-  \item \textbf{U-Type}: upper immediate instructions.
-  \item \textbf{J-Type}: jump instructions.
-\end{itemize}
-%
-\textbf{R-Type:} \\
-The R-Type instruction format is used for register-register operations. It includes fields for the opcode, a 3-bit function code (funct3), a 7-bit function code (funct7), and three register fields: rd (destination register), rs1 (source register 1), and rs2 (source register 2). \\
-\textbf{Example:} \texttt{add x1, x0, x2} would be encoded as follows:
-\begin{verbatim}
-0000000 00010 00000 000     00001 0110011
-^funct7 ^rs2  ^rs1  ^funct3 ^rd   ^opcode
-\end{verbatim} \\~\\
-%
-\textbf{I-Type:} \\
-The I-Type instruction format is used for immediate and load operations. It includes fields for a 12-bit immediate \texttt{imm[11:0]}, a 3-bit function code (funct3), register fields \texttt{rs1} and \texttt{rd}, and the opcode. \\
-\textbf{Example:} \texttt{addi x1, x2, 10} would be encoded as follows:
-\begin{verbatim}
-000000000010 00010 000 00001 0010011
-^imm[11:0]      ^rs1  ^funct3 ^rd   ^opcode
-\end{verbatim} \\~\\
-%
-\textbf{S-Type:} \\
-The S-Type format is used for store instructions. It splits the 12-bit immediate into \texttt{imm[11:5]} and \texttt{imm[4:0]}, with fields: \texttt{imm[11:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:0]}, and \texttt{opcode}. \\
-\textbf{Example:} \texttt{sw x2, 4(x1)} would be encoded as follows:
-\begin{verbatim}
-0000000 00010 00001 010 00100 0100011
-^imm[11:5] ^rs2  ^rs1  ^funct3 ^imm[4:0] ^opcode
-\end{verbatim} \\~\\
-%
-\textbf{B-Type:} \\
-The B-Type format is used for conditional branches. The 12-bit immediate is split into \texttt{imm[12|10:5]} and \texttt{imm[4:1|11]}, with fields: \texttt{imm[12|10:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:1|11]}, and \texttt{opcode}. \\
-\textbf{Example:} \texttt{beq x1, x2, 8} would be encoded as follows:
-\begin{verbatim}
-0000000 00010 00001 000 01000 1100011
-^imm[12|10:5] ^rs2  ^rs1  ^funct3 ^imm[4:1|11] ^opcode
-\end{verbatim} \\~\\
-%
-\textbf{U-Type:} \\
-The U-Type format is used for upper immediate instructions. It places a 20-bit immediate in bits 31:12, followed by \texttt{rd} and \texttt{opcode}. \\
-\textbf{Example:} \texttt{lui x1, 0x12345} would be encoded as follows:
-\begin{verbatim}
-00010010001101000101 00001 0110111
-^imm[31:12]           ^rd   ^opcode
-\end{verbatim} \\~\\
-%
-\textbf{J-Type:} \\
-The J-Type format is used for jump instructions. The 20-bit immediate is split into \texttt{imm[20|10:1|11|19:12]}, followed by \texttt{rd} and \texttt{opcode}. \\
-\textbf{Example:} \texttt{jal x1, 16} would be encoded as follows:
-\begin{verbatim}
-0 00000000 00010000 00001 1101111
-^imm[20|10:1|11|19:12] ^rd    ^opcode
-\end{verbatim}
-
-\cite{riscv-spec}
 
 \subsection{Instruction Set}
 The following sections, describe the instructions of the \textit{RV32I} base instruction set in more detail.
@@ -239,6 +181,73 @@ The \texttt{FENCE} instruction is used to ensure that all previous memory access
 The \texttt{ECALL} instruction is used to make a system call. The implementation section will  further explain how this instruction is handled in the RISC-V VM.
 The \texttt{EBREAK} instruction is used to trigger a breakpoint exception, which can be used for debugging purposes. It is not relevant for the implementation of a RISC-V VM, but it is worth mentioning.
 
+
+\subsection{Instruction Format}
+Instructions in RISC-V are 32 bits wide and encoded in six formats:
+\begin{itemize}
+  \item \textbf{R-Type}: register-register operations.
+  \item \textbf{I-Type}: immediate operations and loads.
+  \item \textbf{S-Type}: store instructions.
+  \item \textbf{B-Type}: conditional branches.
+  \item \textbf{U-Type}: upper immediate instructions.
+  \item \textbf{J-Type}: jump instructions.
+\end{itemize}
+%
+\textbf{R-Type:} \\
+The R-Type instruction format is used for register-register operations. It includes fields for the opcode, a 3-bit function code (funct3), a 7-bit function code (funct7), and three register fields: rd (destination register), rs1 (source register 1), and rs2 (source register 2). \\
+\textbf{Example:} \texttt{add x1, x0, x2} would be encoded as follows:
+\begin{verbatim}
+0000000 00010 00000 000     00001 0110011
+^funct7 ^rs2  ^rs1  ^funct3 ^rd   ^opcode
+\end{verbatim}\medskip
+%
+\textbf{I-Type:} \\
+The I-Type instruction format is used for immediate and load operations. It includes fields for a 12-bit immediate \texttt{imm[11:0]}, a 3-bit function code (funct3), register fields \texttt{rs1} and \texttt{rd}, and the opcode. \\
+\textbf{Example:} \texttt{addi x1, x2, 10} would be encoded as follows:
+\begin{verbatim}
+000000000010 00010 000     00001 0010011
+^imm[11:0]   ^rs1  ^funct3 ^rd   ^opcode
+\end{verbatim}\medskip
+Here the bits of the immediate value are used in the same order as they appear in the instruction. The notation \texttt{imm[11:0]} refers to the 12 bits of the immediate value, with \texttt{imm[11]} being the most significant bit and \texttt{imm[0]} being the least significant bit. \\
+\medskip
+%
+\textbf{S-Type:} \\
+The S-Type format is used for store instructions. It splits the 12-bit immediate into \texttt{imm[11:5]} and \texttt{imm[4:0]}, with fields: \texttt{imm[11:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:0]}, and \texttt{opcode}. \\
+\textbf{Example:} \texttt{sw x2, 4(x1)} would be encoded as follows:
+\begin{verbatim}
+0000000    00010 00001 010     00100     0100011
+^imm[11:5] ^rs2  ^rs1  ^funct3 ^imm[4:0] ^opcode
+\end{verbatim}\medskip
+Here, the immediate value is stored in a more complex way compared to the I-Type format. The \texttt{imm[11:5]} field is used for the upper 7 bits of the immediate value, while the \texttt{imm[4:0]} field is used for the lower 5 bits. The reason for this is, to have more overlap with other instruction formats: The \texttt{rs2} field is located in the same location as it is in the R-Type format. \\
+%
+\textbf{B-Type:} \\
+The B-Type format is used for conditional branches. The 12-bit immediate is split into \texttt{imm[12|10:5]} and \texttt{imm[4:1|11]}, with fields: \texttt{imm[12|10:5]}, \texttt{rs2}, \texttt{rs1}, \texttt{funct3}, \texttt{imm[4:1|11]}, and \texttt{opcode}. \\
+\textbf{Example:} \texttt{beq x1, x2, 8} would be encoded as follows:
+\begin{verbatim}
+0000000       00010 00001 000     01000        1100011
+^imm[12|10:5] ^rs2  ^rs1  ^funct3 ^imm[4:1|11] ^opcode
+\end{verbatim}\medskip
+The B-Type instruction format stores its immediate value using a modified version of the S-Type layout. Since RISC-V requires all branch targets to be aligned on 2-byte boundaries, the immediate value is always even, meaning its least significant bit (bit 0) is guaranteed to be zero. The B-Type format omits it and uses that bit position for other immediate bits. This omission allows the immediate value to effectively represent one additional bit of range. The immediate bits are rearranged within the instruction as follows: bit 11 of the immediate value is placed where the least significant bit would normally be stored, while the most significant bit (bit 12) is positioned in the same location used by I-Type instructions. This placement of the sign bit matches the I-Type format. \cite{riscv-spec} \\
+%
+\textbf{U-Type:} \\
+The U-Type format is used for upper immediate instructions. It places a 20-bit immediate in bits 31:12, followed by \texttt{rd} and \texttt{opcode}. \\
+\textbf{Example:} \texttt{lui x1, 0x12345} would be encoded as follows:
+\begin{verbatim}
+00010010001101000101 00001 0110111
+^imm[31:12]          ^rd   ^opcode
+\end{verbatim}\medskip
+The immediate value occupies bits [31:12] of the instruction, corresponding to bits [31:12] of the target register when loaded. The lower 12 bits are implicitly set to zero, effectively allowing the immediate to represent values that are multiples of 4096. \cite{riscv-spec} \\
+%
+\textbf{J-Type:} \\
+The J-Type format is used for jump instructions. The 20-bit immediate is split into \texttt{imm[20|10:1|11|19:12]}, followed by \texttt{rd} and \texttt{opcode}. \\
+\textbf{Example:} \texttt{jal x1, 16} would be encoded as follows:
+\begin{verbatim}
+0 00000000 00010000    00001  1101111
+^imm[20|10:1|11|19:12] ^rd    ^opcode
+\end{verbatim}
+The J-Type instruction format stores its immediate value using a layout optimized for jump instructions. Like B-Type, it omits the least significant bit since jump targets must be 2-byte aligned, providing 21 bits of range in a 20-bit field. The immediate bits are scrambled within the instruction: bits [20:1] of the target offset are stored as bits [31], [19:12], [20], and [30:21] respectively. This unconventional arrangement places the sign bit (bit 20) in the instruction's most significant position while grouping related immediate segments together for efficient hardware decoding.
+\cite{riscv-spec}
+
 \section{VM Implementation}
 In this section, the implementation of a RISC-V VM in Python is described. The VM is designed to execute simple RISC-V programs and is implemented in a modular way, allowing for easy extension and modification.
 For fixed integer types, the numpy library is used:
@@ -251,7 +260,7 @@ i8  = np.int8
 \end{minted}
 
 \subsection{State}
-First of all, let's define the state of the VM. The state consists of the following components:
+The state of the VM is defined in the \texttt{RVState} class. The state consists of the following components:
 \begin{itemize}
     \item \texttt{mem}: A numpy array of u8 (unsigned 8-bit integers) that represents the memory of the VM. The size of the memory is not fixed, but can be set to a desired value when creating the VM instance.
     \item \texttt{rf}: A list of 32 registers, each 32 bits wide, initialized to zero.
@@ -275,30 +284,37 @@ class RVState:
 For further details, see \texttt{src/state.py}.
 
 \subsection{Instruction Decoding}
-The next step is to decode the instructions. The instructions are stored in memory as 32-bit words, and the VM needs to be able to decode them into their respective fields.
-To do this, a wrapper class \texttt{Instruction} is created, which takes a 32-bit instruction word as input and decodes it into its respective fields.
+The VM fetches instructions from memory as raw 32-bit words. The raw word is stored and all decoded components are exposed via Python \texttt{@property} accessors.
+
 \begin{minted}{python}
+from nums import u32, u8, i32
+
 class Instruction:
-    instruction_word: u32
-    # Opcode and function fields
-    opcode: u8
-    funct3: u8
-    funct7: u8
-    funct12: int
-    # Register fields
-    rd: u8
-    rs1: u8
-    rs2: u8
-    # Immediate fields
-    imm_i: i32
-    imm_s: i32
-    imm_b: i32
-    imm_u: u32
-    imm_j: i32
+    def __init__(self, instruction_word: u32) -> None:
+        self.instruction_word = instruction_word
+
+    @property
+    def opcode(self) -> u8:
+        return u8(self.instruction_word & 0x7F)
+
+    @property
+    def funct3(self) -> u8:
+        return u8((self.instruction_word >> 12) & 0x07)
+
+    @property
+    def funct7(self) -> u8:
+        return u8((self.instruction_word >> 25) & 0x7F)
+
+    @property
+    def rd(self) -> u8:
+        return u8((self.instruction_word >> 7) & 0x1F)
+
+    # ... analogous properties for other fields
 \end{minted}
-The \texttt{\_\_init\_\_} method handles the decoding of the instruction word and sets all of the fields accordingly.
-The \texttt{Instruction} class does not implement any specific instruction logic. It only serves as a data structure to hold the decoded instruction fields.
-For further details on how the decoding works, see \texttt{src/instruction.py}.
+
+\paragraph{Register / function fields} Extraction of \texttt{rd}, \texttt{rs1}, \texttt{rs2}, \texttt{funct3} and \texttt{funct7} (plus \texttt{opcode}) is a straightforward fixed-bit slicing using masks and shifts corresponding exactly to the layouts shown in the ISA manual. \cite{riscv-spec}
+
+The class deliberately omits any execution semantics; it is a pure decoder / view over the 32-bit word. Execution logic remains in instruction implementation classes described in the following section:
 
 \subsection{Instruction Matching}
 The instructions need to be matched against their respective implementations. To do this, an abstract base class \texttt{InstructionImpl} is used, which defines the interface for all instruction implementations.
@@ -308,7 +324,11 @@ class InstructionImpl(ABC):
     def match(self, instruction: Instruction) -> bool:
         pass
     @abstractmethod
-    def execute(self, state: RVState, instruction: Instruction) -> None:
+    def execute(
+        self, 
+        state: RVState, 
+        instruction: Instruction
+    ) -> None:
         pass
 \end{minted}
 The \texttt{match} method is used to check wether the instruction matches the implementation. Typically this is done by checking the opcode and function fields of the instruction.
@@ -351,7 +371,8 @@ class Blt(InstructionImpl):
     
     def execute(self, state: RVState, instruction: 
     Instruction) -> None:
-        # Extract the source registers and immediate value
+        # Extract the source registers
+        # and immediate value
         rs1 = instruction.rs1
         rs2 = instruction.rs2
         imm_b = instruction.imm_b
@@ -412,7 +433,7 @@ For implementation details, see \texttt{src/vm.py}.
 
 \section{First Program}
 With these components in place, a simple RISC-V program can be executed.
-The following program is a simple example, that will generate the first 30 Fibonacci numbers and print them using the \texttt{ECALL} instruction:
+The following program is a simple example, that will generate the first 10 Fibonacci numbers and print them using the \texttt{ECALL} instruction:
 \begin{minted}{gas}
 .global entry
 .text
