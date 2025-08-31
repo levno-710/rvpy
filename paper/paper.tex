@@ -70,7 +70,7 @@ He outlines the key reasons for the development of RISC-V:
 \end{enumerate}
 Waterman argues that RISC-V adresses these issues by providing a simple, open, and extensible ISA that is suitable for both academic research and commercial use. He also emphasizes the importance of a clean-slate design that avoids legacy issues and allows for future extensions. \cite{waterman2016risc}
 
-\subsection{Modular Design}
+\subsection{Modular Design}\label{sec:modular-design}
 RISC-V is designed to be modular, with a small base instruction set that can be extended with optional extensions.
 There are several base instruction sets defined, including \textit{RV32I} for 32-bit integer operations and \textit{RV64I} for 64-bit integer operations.
 These base instruction sets only include very basic integer operations, such as addition, subtraction, and logical operations as well as control flow instructions like branches and jumps.
@@ -316,7 +316,7 @@ class Instruction:
 
 The class deliberately omits any execution semantics; it is a pure decoder / view over the 32-bit word. Execution logic remains in instruction implementation classes described in the following section:
 
-\subsection{Instruction Matching}
+\subsection{Instruction Matching}\label{sec:instruction-matching}
 The instructions need to be matched against their respective implementations. To do this, an abstract base class \texttt{InstructionImpl} is used, which defines the interface for all instruction implementations.
 \begin{minted}{python}
 class InstructionImpl(ABC):
@@ -335,7 +335,7 @@ The \texttt{match} method is used to check wether the instruction matches the im
 Each \texttt{Instruction} that is executed will be matched against all implementations. 
 If a match is found, the \texttt{execute} method is called with the current state and the instruction. Otherwise, an exception is raised.
 
-\subsection{Instruction Implementation}
+\subsection{Instruction Implementation}\label{sec:instruction-implementation}
 The next step is to implement the individual instructions. Each instruction is implemented as a subclass of \texttt{InstructionImpl}.
 For example, the \texttt{ADD} instruction can be implemented as follows:
 \begin{minted}{python}
@@ -506,11 +506,47 @@ When done, the program produces the following output:
 55
 89
 \end{verbatim}
-So far, everything works as expected. The VM is able to execute simple RISC-V programs and handle the \texttt{ECALL} instruction for input/output operations.
+This demonstrates, that the VM is able to execute simple RISC-V programs and handle the \texttt{ECALL} instruction for input/output operations.
 
 \subsection{Extending the VM}
-TODO: Add support for more extensions, such as multiplication, division, floating-point operations, etc. (Partly done, but I have not written about it yet.)
-If I have enough time, I will try to get linux to run on the VM.
+The VM's modular design allows straightforward addition of new instruction sets through the extension system. This mirrors RISC-V's modular design philosophy described in section \ref{sec:modular-design}, where a base instruction set can be extended with optional functionality.
+
+The extension system is built around three core components: the abstract \texttt{Extension} class, the \texttt{InstructionImpl} base class described in section \ref{sec:instruction-matching}, and the VM's extension loading mechanism.
+
+\paragraph{Extension Interface}
+Each extension implements the \texttt{Extension} abstract base class:
+\begin{minted}{python}
+class Extension(ABC):
+    @abstractmethod
+    def get_instruction_implementations(
+        self
+    ) -> list[InstructionImpl]:
+        pass
+\end{minted}
+This simple interface requires only that extensions provide a list of their instruction implementations.
+
+\paragraph{Concrete Extensions}
+The VM includes three extensions that demonstrate different categories of functionality:
+
+The \texttt{RV32I} extension (src/extensions/rv32i.py) implements the complete base integer instruction set described in Section 3. It provides 37 instruction implementations covering arithmetic, logical, shift, branch, jump, load/store, and system operations.
+
+The \texttt{M} extension (src/extensions/m.py) adds integer multiplication and division operations. It implements 8 instructions: \texttt{MUL}, \texttt{MULH}, \texttt{MULHU}, \texttt{MULHSU}, \texttt{DIV}, \texttt{DIVU}, \texttt{REM}, and \texttt{REMU}. This extension includes helper functions for correct signed and unsigned arithmetic operations.
+
+The \texttt{ECALL} extension (src/extensions/ecall.py) handles system calls for basic I/O operations. Unlike hardware implementations that would trap to the operating system, this extension directly implements two system calls: printing integers (syscall 1) and program termination (syscall 10).
+
+\paragraph{Extension Loading}
+Extensions are loaded during VM initialization. The VM constructor accepts a list of extension objects and loads them sequentially:
+\begin{minted}{python}
+def load_extension(self, extension: Extension) -> None:
+    ext_impls = extension.get_instruction_implementations()
+    self.instruction_implementations.extend(ext_impls)
+\end{minted}
+This approach allows extensions to be combined freely, though care must be taken to avoid conflicting instruction encodings.
+
+\paragraph{Instruction Resolution}
+During execution, the VM matches each fetched instruction against all loaded implementations using the \texttt{match\_impl} method (src/vm.py:73). This linear search is simple but not performance-optimized. The VM ensures exactly one match per instruction, raising an exception if multiple implementations claim the same encoding.
+
+Adding new extensions only requires implementing the \texttt{Extension} interface and providing instruction implementations that follow the \texttt{InstructionImpl} pattern shown in section \ref{sec:instruction-implementation}. No modifications to the core VM logic are necessary. 
 
 \section{Conclusion}
 TODO
